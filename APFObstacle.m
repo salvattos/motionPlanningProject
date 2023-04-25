@@ -1,0 +1,45 @@
+classdef APFObstacle
+    properties
+        nu = 80;
+        n = 2;
+        obstaclePos;
+        goalPos;
+        V0;
+        p0;
+        KV = 60;
+        KVPrime = 70;
+    end
+    methods
+        function obj = APFObstacle(obstaclePos,goalPos,p0,V0)
+            obj.goalPos = goalPos;
+            obj.V0 = V0;
+            obj.p0 = p0;
+            obj.obstaclePos = obstaclePos;
+        end
+        function Frep1 = calcFrep1(obj,currentPos)
+            pQ = obj.calcpQ(currentPos);
+            Frep1 = obj.nu*(pQ^-1 - obj.p0^-1)*((pQ^-1)^2)*(currentPos-obj.goalPos).^obj.n;
+        end
+        function Frep2 = calcFrep2(obj,currentPos)
+            pQ = obj.calcpQ(currentPos);
+            Frep2 = (obj.n/2)*obj.nu*((pQ^-1 - obj.p0^-1)^2)*(currentPos-obj.goalPos).^obj.n-1;
+        end
+        function Frep = calcFrepTotal(obj,currentPos,V)
+            pQ = obj.calcpQ(currentPos);
+            Frep1 = obj.calcFrep1(currentPos);
+            Frep2 = obj.calcFrep2(currentPos);
+
+            if pQ <= obj.p0
+                Frep = Frep1 + Frep2 + obj.KVPrime*(V-obj.V0);
+            else
+                Frep = obj.KVPrime*(V - obj.V0);
+            end
+        end
+        function pQ = calcpQ(obj,currentPos)
+            pQ = sqrt(sum((obj.obstaclePos - currentPos) .^ 2)); %might need to switch order
+        end
+        function pG = calcpG(obj,currentPos)
+            pG = sqrt(sum((obj.goalPos - currentPos) .^ 2)); %might need to switch order
+        end
+    end
+end

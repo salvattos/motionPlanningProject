@@ -3,6 +3,7 @@
 xPath = [];
 yPath = [];
 xPath = linspace(0,100,100);
+yPath = linspace(0,100,100);
 yPath = linspace(0,100,100).';
 
 %ρ0 is the affected distance of obstacle, ρg(q) is the Euclidean distance 
@@ -11,8 +12,8 @@ yPath = linspace(0,100,100).';
 obstaclePos = [50;50];
 goalPos  = [95;85];
 
-startPos = [10;15];
-xi = .100;
+startPos = [10;10];
+xi = 100;
 VG = [0;0];
 V0 = [0;0];
 V = [0;0];
@@ -29,7 +30,6 @@ for x = 1:size(xPath,2)
         %Frep = OB1.calcFrepTotal(currentPos,V);
         Frep = 0;
         Fsum = Frep+Fatt;
-       %pGLog(x,y) = calcpG(goalPos,currentPos);
         dxLog(x,y) = Fsum(1);
         dyLog(x,y) = Fsum(2);
     end
@@ -38,11 +38,17 @@ end
 xPath = repmat(xPath,size(xPath,2),1);
 yPath = repmat(yPath,1,size(yPath,1));
 
-test = quiver(xPath,yPath,dxLog,dyLog)
+quiver(xPath,yPath,normalize(dxLog),normalize(dyLog))
 hold on
 plot(goalPos(1),goalPos(2),'rx')
 plot(startPos(1),startPos(2),'gx')
 hold off
 
+function Fatt = calcFatt(xi,pG,KV,VG,V)
+    Fatt = -xi*pG + (KV*(VG-V));
+end
 
+function pG = calcpG(goalPos,currentPos)
+    pG = sqrt(sum((goalPos-currentPos-).^ 2)); %might need to switch order
+end
 

@@ -1,24 +1,24 @@
 import numpy as np
 from APFObstacle import APFObstacle
-#from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 
 
 
 def calcFatt(xi,pG,KV,VG,V):
     #Fatt = np.dot(-xi,pG) + (KV*(VG-V))
-    u = -xi * pG[0]
-    v = -xi * pG[1]
+    u = -xi * pG[0] + (KV * (VG-V))[0] 
+    v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
     return Fatt
 
 
 def calcpG(goalPos,currentPos):
-    print(currentPos[0])
-    print(currentPos[1])
-    print(np.shape(currentPos))
-    print(goalPos)
-    print(np.shape(goalPos))
+    #print(currentPos[0])
+    #print(currentPos[1])
+    #print(np.shape(currentPos))
+    #print(goalPos)
+    #print(np.shape(goalPos))
     #pG = np.subtract(currentPos,goalPos) #might need to switch order
     u = currentPos[0] - goalPos[0]
     v = currentPos[1] - goalPos[1]

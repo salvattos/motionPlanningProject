@@ -3,6 +3,10 @@ from APFObstacle import APFObstacle
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import math
+#import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.animation as animation
+import matplotlib.cm as cm
 
 obstacles = np.array([[0,0], [20,80]])
 goalPos  = np.array([60,60])
@@ -97,6 +101,16 @@ def calcFrep(x,y,obsPos):
     #print(Frep)
     return Frep
 
+def animate(i):
+    #pt = randint(1,9) # grab a random integer to be the next y-value in the animation
+    #x.append(i)
+    #y.append(pt)
+
+    ax.clear()
+    ax.show()
+    #ax.set_xlim([0,20])
+    #ax.set_ylim([0,10])
+
 uatt = []
 vatt = []
 
@@ -148,8 +162,23 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
+def generate_video(img):
+    for i in range(len(img)):
+        plt.imshow(img[i], cmap=cm.Greys_r)
+        plt.savefig(folder + "/file%02d.png" % i)
+
+    os.chdir("your_folder")
+    subprocess.call([
+        'ffmpeg', '-framerate', '8', '-i', 'file%02d.png', '-r', '30', '-pix_fmt', 'yuv420p',
+        'video_name.mp4'
+    ])
+    for file_name in glob.glob("*.png"):
+        os.remove(file_name)
+
 robotPos = [0,40]
-for i in np.arange(0,100,1):
+frames = []
+fig, ax = plt.subplots()
+for i in np.arange(0,1000,1):
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
     #print("vRoatt: " + str(vRoatt))
@@ -171,8 +200,20 @@ for i in np.arange(0,100,1):
     robotPos = robotPos + FRo
 
     plt.quiver(x, y, F[0], F[1])
+    plt.plot(goalPos[0],goalPos[1],'x')
     plt.plot(robotPos[0],robotPos[1],'o')
     plt.grid()
     plt.show()
+    #generate_video(plt.show())
+    #frames.append([plt.show(animated=True)])
+    #im = plt.imshow(fig)
+    #r = plt.gcf().canvas.get_renderer()
+    #x = im.make_image(r, magnification=1.0)
+    #frames.append(x)
+    #im = plt.imshow(plt.gcf().canvas.get_renderer())
+    #frames.append([im])
 
+#ani = animation.FuncAnimation(fig, animate, interval = 1, blit=True, repeat_delay=1000)
+#ani.save("ArtificialPotentialFieldNavigation.mp4")
+#plt.show()
 #print(FattList)

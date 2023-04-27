@@ -5,32 +5,10 @@ import matplotlib.pyplot as plt
 import math
 #import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
 import matplotlib.cm as cm
 
-obstacles = np.array([[0,0], [20,80]])
-goalPos  = np.array([60,60])
 
-startPos = np.array([10,15])
-xi = .100
-VG = np.array([0,0])
-V0 = np.array([0,0])
-V = np.array([0,0])
-p0 = 5.
-KV = 60.
-
-#goalPos = goalPos
-#V0 = V0
-#p0 = p0
-#obstaclePos = obstaclePos   
-nu = 80.
-n = 2.
-#KV = 60
-KVPrime = 70.
-
-k=0.04
-i=10000000000000000000
-repAttRatio = 3
 
 #to do:
 # 1) add robot symbol
@@ -49,7 +27,7 @@ def calcFatt(xi,pG,KV,VG,V):
     u = -xi * pG[0] + (KV * (VG-V))[0] 
     v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
-    Fatt = Fatt/magnitude([u,v])
+    #Fatt = Fatt/magnitude([u,v])
     #print("Fatt: " + str(Fatt))
     return Fatt
 
@@ -66,7 +44,8 @@ def calcpG(goalPos,currentPos):
 def magnitude(vector):
     return np.sqrt(sum(pow(element, 2) for element in vector))
 
-def calcFrep(x,y,obsPos):
+def calcFrep(x,y,obsPos,k,repAttRatio):
+    i = 1000000
     #print(np.shape(obsPos))
     #print(obsPos)
     #print(currentPos)
@@ -101,36 +80,11 @@ def calcFrep(x,y,obsPos):
     #print(Frep)
     return Frep
 
-def animate(i):
-    #pt = randint(1,9) # grab a random integer to be the next y-value in the animation
-    #x.append(i)
-    #y.append(pt)
-
-    ax.clear()
-    ax.show()
-    #ax.set_xlim([0,20])
-    #ax.set_ylim([0,10])
 
 uatt = []
 vatt = []
 
-x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
-                   np.arange(0, 100, 10, dtype=float))
 
-uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
-vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
-Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
-
-
-
-F = Fatt #np.zeros((10,10))#Fatt
-
-for i,obsPos in enumerate(obstacles):
-    urep = calcFrep(x,y,obsPos)[0]
-    vrep = calcFrep(x,y,obsPos)[1]
-    #print(F)
-    Frep = [urep, vrep]
-    F = np.add(F, Frep)
 #print(type(F))
 #print(np.shape(F))
 #print(F)
@@ -162,23 +116,45 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
-def generate_video(img):
-    for i in range(len(img)):
-        plt.imshow(img[i], cmap=cm.Greys_r)
-        plt.savefig(folder + "/file%02d.png" % i)
-
-    os.chdir("your_folder")
-    subprocess.call([
-        'ffmpeg', '-framerate', '8', '-i', 'file%02d.png', '-r', '30', '-pix_fmt', 'yuv420p',
-        'video_name.mp4'
-    ])
-    for file_name in glob.glob("*.png"):
-        os.remove(file_name)
-
 robotPos = [0,40]
-frames = []
-fig, ax = plt.subplots()
-for i in np.arange(0,1000,1):
+
+def animateAFV(frame):
+    global robotPos
+    obstacles = np.array([[0,0], [20,80]])
+    goalPos  = np.array([60,60])
+
+    startPos = np.array([10,15])
+    xi = .100
+    VG = np.array([0,0])
+    V0 = np.array([0,0])
+    V = np.array([0,0])
+    p0 = 5.
+    KV = 60.
+    nu = 80.
+    n = 2.
+    #KV = 60
+    KVPrime = 70.
+
+    k=0.04
+    i=0
+    repAttRatio = 1
+
+    x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
+                   np.arange(0, 100, 10, dtype=float))
+
+    uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
+    vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
+    Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
+
+    F = Fatt #np.zeros((10,10))#Fatt
+
+    for i,obsPos in enumerate(obstacles):
+        urep = calcFrep(x,y,obsPos,k,repAttRatio)[0]
+        vrep = calcFrep(x,y,obsPos,k,repAttRatio)[1]
+        #print(F)
+        Frep = [urep, vrep]
+        F = np.add(F, Frep)
+
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
     #print("vRoatt: " + str(vRoatt))
@@ -190,8 +166,8 @@ for i in np.arange(0,1000,1):
     
     #Frep = [0,0]
     for i,obsPos in enumerate(obstacles):
-        uRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[0]
-        vRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[1]
+        uRorep = calcFrep(robotPos[0],robotPos[1], obsPos,k,repAttRatio)[0]
+        vRorep = calcFrep(robotPos[0],robotPos[1], obsPos,k,repAttRatio)[1]
         #print(uRorep)
         FRorep = [uRorep, vRorep]
         #print(Frep)
@@ -201,9 +177,14 @@ for i in np.arange(0,1000,1):
 
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')
-    plt.plot(robotPos[0],robotPos[1],'o')
+    plt.plot(robotPos[0],robotPos[1],'o',color='red')
     plt.grid()
-    plt.show()
+        #plt.show()
+
+fig = plt.figure()
+ani = FuncAnimation(fig, animateAFV, interval=250,frames=1000)
+plt.show()
+
     #generate_video(plt.show())
     #frames.append([plt.show(animated=True)])
     #im = plt.imshow(fig)

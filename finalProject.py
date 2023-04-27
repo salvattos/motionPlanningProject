@@ -28,6 +28,17 @@ k=0.04
 i=10000000000000000000
 repAttRatio = 3
 
+#to do:
+# 1) add robot symbol
+# 2) create animation loop
+# 3) move robot symbol according to force data
+# 4) actually get video library running
+# 5) create video
+
+#other
+#figure out why i component of sigmoid repulsion limit isn't working.
+#mayble implement piecewise turnoff for repulsion
+#
 
 def calcFatt(xi,pG,KV,VG,V):
     #Fatt = np.dot(-xi,pG) + (KV*(VG-V))
@@ -35,6 +46,7 @@ def calcFatt(xi,pG,KV,VG,V):
     v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
     Fatt = Fatt/magnitude([u,v])
+    #print("Fatt: " + str(Fatt))
     return Fatt
 
 
@@ -44,15 +56,18 @@ def calcpG(goalPos,currentPos):
     u = currentPos[0] - goalPos[0]
     v = currentPos[1] - goalPos[1]
     pG = [u,v]
+    #print("pG: " + str(pG))
     return pG
 
 def magnitude(vector):
     return np.sqrt(sum(pow(element, 2) for element in vector))
 
-def calcFrep(obsPos, currentPos):
+def calcFrep(x,y,obsPos):
     #print(np.shape(obsPos))
     #print(obsPos)
-    pQ = calcpG(obsPos, currentPos)
+    #print(currentPos)
+    #pQ = calcpG(obsPos, currentPos)
+    #print(pQ)
     #Frep = self.nu*(pQ**-1 - self.p0**-1)*((pQ**-1)**2)*np.power((currentPos-self.goalPos),self.n)
     
     #building my own repulsion because this one sucks
@@ -60,6 +75,7 @@ def calcFrep(obsPos, currentPos):
     #print(obsPos[1])
     u = -((y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
     v = -(-(y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
+    #print(u)
     
     #u = nu*((1/pQ[0])-(1/p0)*((1/pQ[0])**2))#*(currentPos[0]-obsPos[0]))
     #v = nu*((1/pQ[1])-(1/p0)*((1/pQ[1])**2))#*(currentPos[1]-obsPos[1]))
@@ -67,6 +83,7 @@ def calcFrep(obsPos, currentPos):
     #u = nu*(np.power(pQ[0],-1) - np.power(float(p0),-1))*(np.power(float(pQ[0]),-1)**2)#*np.power((currentPos[0] - goalPos[0]),n))
     #v = nu*(pQ[1]**-1 - p0**-1)*((pQ[1]**-1**2))#*np.power((currentPos[1] - goalPos[1]),n))
     Frep = [u,v]#/(magnitude([u,v])))#*(1/(1 + np.exp(k*(magnitude([u,v])-i))))
+    #print(Frep)
     #print("before Scaleup")
     #print(Frep)
     #Frep = np.multiply(Frep, 200)
@@ -95,8 +112,8 @@ Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
 F = Fatt #np.zeros((10,10))#Fatt
 
 for i,obsPos in enumerate(obstacles):
-    urep = calcFrep(obsPos, [x,y])[0]
-    vrep = calcFrep(obsPos, [x,y])[1]
+    urep = calcFrep(x,y,obsPos)[0]
+    vrep = calcFrep(x,y,obsPos)[1]
     #print(F)
     Frep = [urep, vrep]
     F = np.add(F, Frep)
@@ -130,8 +147,32 @@ w = 0
 #u, v = 
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
-plt.quiver(x, y, F[0], F[1])
-plt.grid()
-plt.show()
+
+robotPos = [0,40]
+for i in np.arange(0,100,1):
+    uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
+    vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
+    #print("vRoatt: " + str(vRoatt))
+    FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
+    #print("FRoatt: " + str(FRoatt))
+    
+    FRo = FRoatt
+    #print(FRo)
+    
+    #Frep = [0,0]
+    for i,obsPos in enumerate(obstacles):
+        uRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[0]
+        vRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[1]
+        #print(uRorep)
+        FRorep = [uRorep, vRorep]
+        #print(Frep)
+        FRo = np.add(FRo, FRorep)
+    
+    robotPos = robotPos + FRo
+
+    plt.quiver(x, y, F[0], F[1])
+    plt.plot(robotPos[0],robotPos[1],'o')
+    plt.grid()
+    plt.show()
 
 #print(FattList)

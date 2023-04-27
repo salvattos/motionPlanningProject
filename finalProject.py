@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import math
 
-obstacles = np.array([50,50])
+obstacles = np.array([[0,0], [20,80]])
 goalPos  = np.array([60,60])
 
 startPos = np.array([10,15])
@@ -24,8 +24,9 @@ n = 2.
 #KV = 60
 KVPrime = 70.
 
-k=0.03
-i=100000000000000
+k=0.04
+i=10000000000000000000
+repAttRatio = 3
 
 
 def calcFatt(xi,pG,KV,VG,V):
@@ -33,6 +34,7 @@ def calcFatt(xi,pG,KV,VG,V):
     u = -xi * pG[0] + (KV * (VG-V))[0] 
     v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
+    Fatt = Fatt/magnitude([u,v])
     return Fatt
 
 
@@ -54,8 +56,10 @@ def calcFrep(obsPos, currentPos):
     #Frep = self.nu*(pQ**-1 - self.p0**-1)*((pQ**-1)**2)*np.power((currentPos-self.goalPos),self.n)
     
     #building my own repulsion because this one sucks
-    u = -(y-x)#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
-    v = -(-y-x)#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
+    #print(obsPos[0])
+    #print(obsPos[1])
+    u = -((y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
+    v = -(-(y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
     
     #u = nu*((1/pQ[0])-(1/p0)*((1/pQ[0])**2))#*(currentPos[0]-obsPos[0]))
     #v = nu*((1/pQ[1])-(1/p0)*((1/pQ[1])**2))#*(currentPos[1]-obsPos[1]))
@@ -63,14 +67,14 @@ def calcFrep(obsPos, currentPos):
     #u = nu*(np.power(pQ[0],-1) - np.power(float(p0),-1))*(np.power(float(pQ[0]),-1)**2)#*np.power((currentPos[0] - goalPos[0]),n))
     #v = nu*(pQ[1]**-1 - p0**-1)*((pQ[1]**-1**2))#*np.power((currentPos[1] - goalPos[1]),n))
     Frep = [u,v]#/(magnitude([u,v])))#*(1/(1 + np.exp(k*(magnitude([u,v])-i))))
-    print("before Scaleup")
-    print(Frep)
+    #print("before Scaleup")
+    #print(Frep)
     #Frep = np.multiply(Frep, 200)
     #Frep = Frep * 200
-    Frep = Frep/(magnitude([u,v]))*1/(1+np.exp(k*(magnitude([u,v])-i)))
+    Frep = (Frep/(magnitude([u,v])))*1/(1+np.exp(k*(magnitude([u,v])-i)))*(repAttRatio/1)
     #Frep = (100*Frep).astype(int)
-    print("after Scaleup")
-    print(Frep)
+    #print("after Scaleup")
+    #print(Frep)
     #Frep = Frep * np.full(np.shape(Frep), 1)
     #print("after Scaleup 2")
     #print(Frep)
@@ -84,20 +88,21 @@ x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
 
 uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
 vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
-Fatt = [uatt, vatt]
+Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
 
 
 
-F = np.zeros((10,10))#Fatt
+F = Fatt #np.zeros((10,10))#Fatt
 
 for i,obsPos in enumerate(obstacles):
-    urep = calcFrep([10,20], [x,y])[0]
-    vrep = calcFrep([10,20], [x,y])[1]
+    urep = calcFrep(obsPos, [x,y])[0]
+    vrep = calcFrep(obsPos, [x,y])[1]
+    #print(F)
     Frep = [urep, vrep]
     F = np.add(F, Frep)
-print(type(F))
-print(np.shape(F))
-print(F)
+#print(type(F))
+#print(np.shape(F))
+#print(F)
 #u = -(y-x)
 #v = -(-y-x)
 w = 0

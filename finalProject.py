@@ -3,7 +3,6 @@ from APFObstacle import APFObstacle
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import math
-#import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.animation import FuncAnimation
 import matplotlib.cm as cm
@@ -116,30 +115,27 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
-robotPos = np.array([0,40])
+robotPos = np.array([0,0])
 
 def animateSOC(frame):
+    plt.grid()
+    plt.clf()
     global robotPos
-    goalPos  = np.array([60,60])
-    OB1 = APFObstacle([40,50],[60,60],20,[0,0])
-    OB1.nu = 5
-    OB2 = APFObstacle([20,80],[60,60],10,[0,0])
+    goalPos  = np.array([90,90])
+    OB1 = APFObstacle([50,30],[90,90],10,[0,0])
+    OB1.nu = 1
+    OB1.SOI = 25
+    OB2 = APFObstacle([50,60],[90,90],10,[0,0])
+    OB1.nu = 1
+    OB1.SOI = 25
 
     obstacles = [OB1,OB2]
 
-    xi = .100
+    xi = .05
     VG = np.array([0,0])
-    V0 = np.array([0,0])
     V = np.array([0,0])
-    p0 = 5.
     KV = 60.
-    nu = 80.
-    n = 2.
-    #KV = 60
-    KVPrime = 70.
 
-    k=0.04
-    i=0
     repAttRatio = 1
 
     x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
@@ -154,9 +150,7 @@ def animateSOC(frame):
     for xPt in range(0,x.shape[0]):
         for yPt in range(0,y.shape[1]):
             for obs in obstacles:
-               # U = obs.calcFrepTotal(robotPos,V)[0]
-               # V = obs.calcFrepTotal(robotPos,V)[1]
-                F[:,xPt,yPt] = F[:,xPt,yPt] +  obs.calcFrepTotal(robotPos,V)
+                F[:,xPt,yPt] = F[:,xPt,yPt] +  obs.calcFrepTotal(np.array([xPt,yPt]),V)
 
     print("F: " + str(F.shape))
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
@@ -170,13 +164,18 @@ def animateSOC(frame):
     for obs in obstacles:
         FRorep = obs.calcFrepTotal(robotPos,V)
         FRo = np.add(FRo, FRorep)
+        #Plotting
+        plt.plot(obs.obstaclePos[0],obs.obstaclePos[1],'o',color='green')
+        cir = plt.Circle((obs.obstaclePos[0],obs.obstaclePos[1]),obs.p0)
+        plt.gca().add_artist(cir)
     
     robotPos = robotPos + FRo
-
+    print("FRo: " + str(FRo))
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')
     plt.plot(robotPos[0],robotPos[1],'o',color='red')
-    plt.plot(40,50,'o',color='green')
+    
+    
 
 def animateAFV(frame):
     global robotPos
@@ -188,10 +187,7 @@ def animateAFV(frame):
     VG = np.array([0,0])
     V0 = np.array([0,0])
     V = np.array([0,0])
-    p0 = 5.
     KV = 60.
-    nu = 80.
-    n = 2.
     #KV = 60
     KVPrime = 70.
 
@@ -243,8 +239,7 @@ def animateAFV(frame):
         #plt.show()
 
 fig = plt.figure()
-ani = FuncAnimation(fig, animateSOC, interval=500,frames=1000)
-plt.grid()
+ani = FuncAnimation(fig, animateSOC, interval=100,frames=1000)
 plt.show()
 
     #generate_video(plt.show())

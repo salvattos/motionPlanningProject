@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 import matplotlib.animation as animation
 import matplotlib.cm as cm
 
-obstacles = np.array([[0,0], [20,80]])
+obstacles = np.array([[40,50]])
 goalPos  = np.array([60,60])
 
 startPos = np.array([10,15])
@@ -30,7 +30,7 @@ KVPrime = 70.
 
 k=0.04
 i=10000000000000000000
-repAttRatio = 3
+repAttRatio = 1.3
 
 #to do:
 # 1) add robot symbol
@@ -49,7 +49,7 @@ def calcFatt(xi,pG,KV,VG,V):
     u = -xi * pG[0] + (KV * (VG-V))[0] 
     v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
-    Fatt = Fatt/magnitude([u,v])
+    Fatt = np.multiply((1/repAttRatio),Fatt/magnitude([u,v]))
     #print("Fatt: " + str(Fatt))
     return Fatt
 
@@ -101,25 +101,15 @@ def calcFrep(x,y,obsPos):
     #print(Frep)
     return Frep
 
-def animate(i):
-    #pt = randint(1,9) # grab a random integer to be the next y-value in the animation
-    #x.append(i)
-    #y.append(pt)
-
-    ax.clear()
-    ax.show()
-    #ax.set_xlim([0,20])
-    #ax.set_ylim([0,10])
-
 uatt = []
 vatt = []
 
-x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
-                   np.arange(0, 100, 10, dtype=float))
+x, y = np.meshgrid(np.arange(0, 80, 5, dtype=float),
+                   np.arange(0, 80, 5, dtype=float))
 
 uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
 vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
-Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
+Fatt = [uatt, vatt]#np.multiply([uatt, vatt],(1/repAttRatio))
 
 
 
@@ -162,34 +152,22 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
-def generate_video(img):
-    for i in range(len(img)):
-        plt.imshow(img[i], cmap=cm.Greys_r)
-        plt.savefig(folder + "/file%02d.png" % i)
-
-    os.chdir("your_folder")
-    subprocess.call([
-        'ffmpeg', '-framerate', '8', '-i', 'file%02d.png', '-r', '30', '-pix_fmt', 'yuv420p',
-        'video_name.mp4'
-    ])
-    for file_name in glob.glob("*.png"):
-        os.remove(file_name)
-
 robotPos = [0,40]
 frames = []
 fig, ax = plt.subplots()
-for i in np.arange(0,1000,1):
+for i in np.arange(0,200,1):
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
     #print("vRoatt: " + str(vRoatt))
-    FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
+    FRoatt = [uRoatt, vRoatt]
+    #FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
     #print("FRoatt: " + str(FRoatt))
     
     FRo = FRoatt
     #print(FRo)
     
     #Frep = [0,0]
-    for i,obsPos in enumerate(obstacles):
+    for j,obsPos in enumerate(obstacles):
         uRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[0]
         vRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[1]
         #print(uRorep)
@@ -197,13 +175,17 @@ for i in np.arange(0,1000,1):
         #print(Frep)
         FRo = np.add(FRo, FRorep)
     
+    print("iteration: " + str(i))
+    print("robotPos: " + str(robotPos))
+    print("FRo: " + str(FRo))
     robotPos = robotPos + FRo
+    plt.quiver(robotPos[0], robotPos[1], FRoatt[0], FRoatt[1])
 
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')
-    plt.plot(robotPos[0],robotPos[1],'o')
+    plt.plot(robotPos[0],robotPos[1],'o', color="red")
     plt.grid()
-    plt.show()
+    plt.savefig("Images/PotentialField_" + str(i))
     #generate_video(plt.show())
     #frames.append([plt.show(animated=True)])
     #im = plt.imshow(fig)

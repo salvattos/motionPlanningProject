@@ -116,7 +116,67 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
-robotPos = [0,40]
+robotPos = np.array([0,40])
+
+def animateSOC(frame):
+    global robotPos
+    goalPos  = np.array([60,60])
+    OB1 = APFObstacle([40,50],[60,60],20,[0,0])
+    OB1.nu = 5
+    OB2 = APFObstacle([20,80],[60,60],10,[0,0])
+
+    obstacles = [OB1,OB2]
+
+    xi = .100
+    VG = np.array([0,0])
+    V0 = np.array([0,0])
+    V = np.array([0,0])
+    p0 = 5.
+    KV = 60.
+    nu = 80.
+    n = 2.
+    #KV = 60
+    KVPrime = 70.
+
+    k=0.04
+    i=0
+    repAttRatio = 1
+
+    x, y = np.meshgrid(np.arange(0, 100, 10, dtype=float),
+                   np.arange(0, 100, 10, dtype=float))
+    
+    uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
+    vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
+    Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
+    print("Fatt: " + str(Fatt.shape))
+    F = Fatt
+
+    for xPt in range(0,x.shape[0]):
+        for yPt in range(0,y.shape[1]):
+            for obs in obstacles:
+               # U = obs.calcFrepTotal(robotPos,V)[0]
+               # V = obs.calcFrepTotal(robotPos,V)[1]
+                F[:,xPt,yPt] = F[:,xPt,yPt] +  obs.calcFrepTotal(robotPos,V)
+
+    print("F: " + str(F.shape))
+    uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
+    vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
+    #print("vRoatt: " + str(vRoatt))
+    FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
+    #print("FRoatt: " + str(FRoatt))
+    
+    FRo = FRoatt
+
+    for obs in obstacles:
+        FRorep = obs.calcFrepTotal(robotPos,V)
+        FRo = np.add(FRo, FRorep)
+    
+    robotPos = robotPos + FRo
+
+    plt.quiver(x, y, F[0], F[1])
+    plt.plot(goalPos[0],goalPos[1],'x')
+    plt.plot(robotPos[0],robotPos[1],'o',color='red')
+    plt.plot(40,50,'o',color='green')
 
 def animateAFV(frame):
     global robotPos
@@ -145,16 +205,17 @@ def animateAFV(frame):
     uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
     vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
     Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
+    print(uatt.shape)
 
     F = Fatt #np.zeros((10,10))#Fatt
-
+    print("Fatt: " + str(Fatt.shape))
     for i,obsPos in enumerate(obstacles):
         urep = calcFrep(x,y,obsPos,k,repAttRatio)[0]
         vrep = calcFrep(x,y,obsPos,k,repAttRatio)[1]
         #print(F)
         Frep = [urep, vrep]
         F = np.add(F, Frep)
-
+    print("F: " + str(F.shape))
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
     #print("vRoatt: " + str(vRoatt))
@@ -178,11 +239,12 @@ def animateAFV(frame):
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')
     plt.plot(robotPos[0],robotPos[1],'o',color='red')
-    plt.grid()
+    
         #plt.show()
 
 fig = plt.figure()
-ani = FuncAnimation(fig, animateAFV, interval=250,frames=1000)
+ani = FuncAnimation(fig, animateSOC, interval=500,frames=1000)
+plt.grid()
 plt.show()
 
     #generate_video(plt.show())

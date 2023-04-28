@@ -32,7 +32,7 @@ class APFObstacle:
         return Frep
 
     def calcpQ(self,currentPos):
-        pQ = np.linalg.norm(self.obstaclePos-currentPos)
+        pQ = np.linalg.norm(currentPos-self.obstaclePos)
         return pQ
     def calcpG(self,currentPos):
         pG = pG = currentPos-self.goalPos

@@ -1,15 +1,14 @@
 import numpy as np
 class APFObstacle:
-    def __init__(self,obstaclePos,goalPos,p0,V0):
-            self.goalPos = goalPos
+    def __init__(self,obstaclePos,p0,V0):
             self.V0 = V0
             self.p0 = p0
             self.obstaclePos = obstaclePos   
             self.nu = 50
             self.SOI = p0*2
             self.n = 2
-            self.KV = 60
-            self.KVPrime = 70   
+            self.KV = .60
+            self.KVPrime = .70   
 
     def calcFrep1(self,currentPos):
         pQ = self.calcpQ(currentPos)
@@ -55,3 +54,5 @@ class APFObstacle:
         return pG
     def magnitude(self,vector):
         return np.sqrt(sum(pow(element, 2) for element in vector))
+    def advanceStep(self):
+        self.obstaclePos += + self.V0

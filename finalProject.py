@@ -45,38 +45,10 @@ def magnitude(vector):
 
 def calcFrep(x,y,obsPos,k,repAttRatio):
     i = 1000000
-    #print(np.shape(obsPos))
-    #print(obsPos)
-    #print(currentPos)
-    #pQ = calcpG(obsPos, currentPos)
-    #print(pQ)
-    #Frep = self.nu*(pQ**-1 - self.p0**-1)*((pQ**-1)**2)*np.power((currentPos-self.goalPos),self.n)
-    
-    #building my own repulsion because this one sucks
-    #print(obsPos[0])
-    #print(obsPos[1])
     u = -((y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
     v = -(-(y-obsPos[1])-(x-obsPos[0]))#/np.sqrt(sum(pow(-(y-x),2), pow(-(-y-x),2)))
-    #print(u)
-    
-    #u = nu*((1/pQ[0])-(1/p0)*((1/pQ[0])**2))#*(currentPos[0]-obsPos[0]))
-    #v = nu*((1/pQ[1])-(1/p0)*((1/pQ[1])**2))#*(currentPos[1]-obsPos[1]))
-    
-    #u = nu*(np.power(pQ[0],-1) - np.power(float(p0),-1))*(np.power(float(pQ[0]),-1)**2)#*np.power((currentPos[0] - goalPos[0]),n))
-    #v = nu*(pQ[1]**-1 - p0**-1)*((pQ[1]**-1**2))#*np.power((currentPos[1] - goalPos[1]),n))
     Frep = [u,v]#/(magnitude([u,v])))#*(1/(1 + np.exp(k*(magnitude([u,v])-i))))
-    #print(Frep)
-    #print("before Scaleup")
-    #print(Frep)
-    #Frep = np.multiply(Frep, 200)
-    #Frep = Frep * 200
     Frep = (Frep/(magnitude([u,v])))*1/(1+np.exp(k*(magnitude([u,v])-i)))*(repAttRatio/1)
-    #Frep = (100*Frep).astype(int)
-    #print("after Scaleup")
-    #print(Frep)
-    #Frep = Frep * np.full(np.shape(Frep), 1)
-    #print("after Scaleup 2")
-    #print(Frep)
     return Frep
 
 
@@ -84,51 +56,25 @@ uatt = []
 vatt = []
 
 
-#print(type(F))
-#print(np.shape(F))
-#print(F)
-#u = -(y-x)
-#v = -(-y-x)
 w = 0
-#x, y, z = np.meshgrid(np.arange(-0.8, 1, 0.3),
-#                      np.arange(-0.8, 1, 0.3),
-#                      np.arange(-0.8, 1, 0.3))
 
-#u = -(y-x)#np.sin(np.pi * x) * np.cos(np.pi * y) * np.cos(np.pi * z)
-#v = -(-y-x)#-np.cos(np.pi * x) * np.sin(np.pi * y) * np.cos(np.pi * z)
-#w = -(-z-x)#(np.sqrt(2.0 / 3.0) * np.cos(np.pi * x) * np.cos(np.pi * y) * np.sin(np.pi * z))
-#z=0
-#print(z)
-
-#print(x)
-#print(y)
-#for x in range(0,100):
-#    for y in range(0,100):
-#        currentPos = np.array([x,y])
-        #Attraction force
-#        Fatt = calcFatt(xi,calcpG(goalPos,currentPos),KV,VG,V)
-#        FattList.append(Fatt)
-        #Frep = OB1.calcFrepTotal(currentPos,V)
-#        Frep = 0
-#        Fsum = Frep+Fatt
-#u, v = 
-#fig = plt.figure()
-#ax = fig.add_subplot(projection="3d")
 
 robotPos = np.array([0,0])
+OB1 = APFObstacle([30,30],5,np.array([.1,.1]))
+OB1.nu = 10
+OB2 = APFObstacle([55,45],5,np.array([0,.1]))
+OB3 = APFObstacle([65,85],5,np.array([0,-.1]))
+OB4 = APFObstacle([85,75],5,np.array([0,0]))
+
+obstacles = [OB1,OB2,OB3,OB4]
 
 def animateSOC(frame):
     plt.grid()
-    plt.clf()
+    #plt.clf()
     global robotPos
+    global obstacles
     goalPos  = np.array([90,90])
-    OB1 = APFObstacle([30,30],goalPos,5,np.array([0,0]))
-    OB1.nu = 10
-    OB2 = APFObstacle([55,45],goalPos,5,np.array([0,0]))
-    OB3 = APFObstacle([65,85],goalPos,5,np.array([0,0]))
-    OB4 = APFObstacle([85,75],goalPos,5,np.array([0,0]))
 
-    obstacles = [OB1,OB2,OB3,OB4]
 
     xi = .02
     VG = np.array([0,0])
@@ -142,9 +88,8 @@ def animateSOC(frame):
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
     #print("vRoatt: " + str(vRoatt))
     FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
-    #print("FRoatt: " + str(FRoatt))
     
-    FRo = FRoatt
+    FRo = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)
 
     for obs in obstacles:
         FRorep = obs.calcFrepTotal(robotPos,V)
@@ -153,6 +98,8 @@ def animateSOC(frame):
         plt.plot(obs.obstaclePos[0],obs.obstaclePos[1],'o',color='green')
         cir = plt.Circle((obs.obstaclePos[0],obs.obstaclePos[1]),obs.p0,fill=False)
         plt.gca().add_artist(cir)
+        obs.advanceStep()
+        
     
     robotPos = robotPos + FRo
     print("FRo: " + str(FRo))

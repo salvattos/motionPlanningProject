@@ -1,5 +1,7 @@
 import numpy as np
 from APFObstacle import APFObstacle
+from Goal import Goal
+from Agent import Agent
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import math
@@ -22,22 +24,16 @@ import matplotlib.cm as cm
 #
 
 def calcFatt(xi,pG,KV,VG,V):
-    #Fatt = np.dot(-xi,pG) + (KV*(VG-V))
     u = -xi * pG[0] + (KV * (VG-V))[0] 
     v = -xi * pG[1] + (KV * (VG-V))[1]
     Fatt = [u,v]
-    #Fatt = Fatt/magnitude([u,v])
-    #print("Fatt: " + str(Fatt))
     return Fatt
 
 
 def calcpG(goalPos,currentPos):
-    #print(np.shape(goalPos))
-    #print(np.shape(currentPos))
     u = currentPos[0] - goalPos[0]
     v = currentPos[1] - goalPos[1]
     pG = [u,v]
-    #print("pG: " + str(pG))
     return pG
 
 def magnitude(vector):
@@ -58,53 +54,62 @@ vatt = []
 
 w = 0
 
+V = np.array([0,0])
+robotPos = np.array([0,0],dtype=np.float64)
+robot1 = Agent(robotPos,V)
+robot2 = Agent(np.array([0.,90.]),V)
+robot3 = Agent(np.array([70.,0.]),V)
 
-robotPos = np.array([0,0])
-OB1 = APFObstacle([30,30],5,np.array([.1,.1]))
-OB1.nu = 10
-OB2 = APFObstacle([55,45],5,np.array([0,.1]))
-OB3 = APFObstacle([65,85],5,np.array([0,-.1]))
+agents = [robot1,robot2,robot3]
+
+OB1 = APFObstacle([30,30],5,np.array([0,0]))
+OB2 = APFObstacle([55,45],5,np.array([0,.0]))
+OB3 = APFObstacle([65,85],5,np.array([0,0]))
 OB4 = APFObstacle([85,75],5,np.array([0,0]))
 
+xi = .02
+VG = np.array([.25,.25])
+goalPos = [90,90]
+goal = Goal(goalPos,VG,xi)
+
 obstacles = [OB1,OB2,OB3,OB4]
+
 
 def animateSOC(frame):
     plt.grid()
     #plt.clf()
-    global robotPos
+    global agents
     global obstacles
-    goalPos  = np.array([90,90])
+    global goal
 
+    if frame > 100:
+        goal.VG = np.array([0,0])
 
-    xi = .02
-    VG = np.array([0,0])
-    V = np.array([0,0])
-    KV = 60.
-
-    repAttRatio = 1
-
-
-    uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
-    vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
-    #print("vRoatt: " + str(vRoatt))
-    FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
-    
-    FRo = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)
-
-    for obs in obstacles:
-        FRorep = obs.calcFrepTotal(robotPos,V)
-        FRo = np.add(FRo, FRorep)
+    for robot in agents:
+        robotPos = robot.robotPos
+        FRo = goal.calcFatt(robotPos,V)
+        for obs in obstacles:
+            FRorep = obs.calcFrepTotal(robotPos,V)
+            FRo = np.add(FRo, FRorep)
+            #Plotting
+            plt.plot(obs.obstaclePos[0],obs.obstaclePos[1],'o',color='green')
+            cir = plt.Circle((obs.obstaclePos[0],obs.obstaclePos[1]),obs.p0,fill=False)
+            plt.gca().add_artist(cir)
+        lastPos = robot.robotPos
+        robot.applyForce(FRo)
+        robot.V = robot.robotPos-lastPos
         #Plotting
-        plt.plot(obs.obstaclePos[0],obs.obstaclePos[1],'o',color='green')
-        cir = plt.Circle((obs.obstaclePos[0],obs.obstaclePos[1]),obs.p0,fill=False)
-        plt.gca().add_artist(cir)
+        plt.plot(robot.robotPos[0],robot.robotPos[1],'o',color='red')
+        
+    for obs in obstacles:
         obs.advanceStep()
         
-    
-    robotPos = robotPos + FRo
+    goal.advanceStep()
+    plt.plot(goal.goalPos[0],goal.goalPos[1],'x')
+
     print("FRo: " + str(FRo))
-    plt.plot(goalPos[0],goalPos[1],'x')
-    plt.plot(robotPos[0],robotPos[1],'o',color='red')
+    print("V: ",robot.V)
+
     plt.axis('square')
     
     

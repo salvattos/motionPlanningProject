@@ -7,7 +7,6 @@ class APFObstacle:
             self.nu = 50
             self.SOI = p0*2
             self.n = 2
-            self.KV = .60
             self.KVPrime = .70   
 
     def calcFrep1(self,currentPos):

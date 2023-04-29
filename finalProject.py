@@ -119,12 +119,12 @@ robotPos = np.array([0,0])
 
 def animateSOC(frame):
     plt.grid()
-    plt.clf()
+    #plt.clf()
     global robotPos
     goalPos  = np.array([90,90])
-    OB1 = APFObstacle([30,30],goalPos,5,np.array([0,0]))
+    OB1 = APFObstacle([40,45],goalPos,5,np.array([0,0]))
     OB1.nu = 10
-    OB2 = APFObstacle([55,45],goalPos,5,np.array([0,0]))
+    OB2 = APFObstacle([45,40],goalPos,5,np.array([0,0]))
     OB3 = APFObstacle([65,85],goalPos,5,np.array([0,0]))
     OB4 = APFObstacle([85,75],goalPos,5,np.array([0,0]))
 

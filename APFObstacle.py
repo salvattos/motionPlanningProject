@@ -38,9 +38,8 @@ class APFObstacle:
                 Frep = [u,v]#/(magnitude([u,v])))#*(1/(1 + np.exp(k*(magnitude([u,v])-i))))
             else:
                 Frep = [-v,-u]
-            k = .01
-            repAttRatio = 1
-            Frep = (Frep/(self.magnitude([u,v])))*1/(1+np.exp(k*(self.magnitude([u,v]))))*(repAttRatio/1)
+            k = .001
+            Frep = (Frep/(self.magnitude([u,v])))*1/(1+np.exp(k*(self.magnitude([u,v]))))
         else: 
             Frep = 0
         return Frep

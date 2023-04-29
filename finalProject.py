@@ -92,6 +92,7 @@ def animateSOC(frame):
         V = robot.V
         FRo = goal.calcFatt(robotPos,V)
         for obs in obstacles:
+            #obs.V0 = np.array([0.,0.])
             FRorep = obs.calcFrepTotal(robotPos,V)
             FRo = np.add(FRo, FRorep)
             #Plotting
@@ -184,7 +185,7 @@ def animateAFV(frame):
 fig = plt.figure()
 animation = FuncAnimation(fig, animateSOC, interval=10,frames=250)
 writergif = PillowWriter(fps=30) 
-animation.save('animation.gif', writer=writergif)
+animation.save('movingGoals.gif', writer=writergif)
 #plt.show()
 
     #generate_video(plt.show())

@@ -29,8 +29,8 @@ n = 2.
 KVPrime = 70.
 
 k=0.04
-i=10000000000000000000
-repAttRatio = 1.3
+i=0
+repAttRatio = 1.5
 
 #to do:
 # 1) add robot symbol
@@ -113,14 +113,16 @@ Fatt = [uatt, vatt]#np.multiply([uatt, vatt],(1/repAttRatio))
 
 
 
-F = Fatt #np.zeros((10,10))#Fatt
-
+#F = Fatt #np.zeros((10,10))#Fatt
+Freps = np.zeros(np.shape(Fatt))
 for i,obsPos in enumerate(obstacles):
     urep = calcFrep(x,y,obsPos)[0]
     vrep = calcFrep(x,y,obsPos)[1]
     #print(F)
     Frep = [urep, vrep]
-    F = np.add(F, Frep)
+    Freps = np.add(Freps, Frep)
+
+F = np.add(Freps, Fatt)
 #print(type(F))
 #print(np.shape(F))
 #print(F)
@@ -152,34 +154,51 @@ w = 0
 #fig = plt.figure()
 #ax = fig.add_subplot(projection="3d")
 
-robotPos = [0,40]
+#robotPos = [0,40]
+robotPos = [38.01414399, 21.81876387]
 frames = []
 fig, ax = plt.subplots()
 for i in np.arange(0,200,1):
+    #uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
+    #vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
+    #FRoatt = [uRoatt, vRoatt]
+
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
-    #print("vRoatt: " + str(vRoatt))
     FRoatt = [uRoatt, vRoatt]
-    #FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
-    #print("FRoatt: " + str(FRoatt))
-    
+
     FRo = FRoatt
     #print(FRo)
     
     #Frep = [0,0]
+    FRoreps = np.zeros(np.shape(FRoatt))
     for j,obsPos in enumerate(obstacles):
         uRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[0]
         vRorep = calcFrep(robotPos[0],robotPos[1], obsPos)[1]
         #print(uRorep)
         FRorep = [uRorep, vRorep]
         #print(Frep)
-        FRo = np.add(FRo, FRorep)
+        FRoreps = np.add(FRoreps, FRorep)
+        
+    FRo = np.add(FRoreps, FRoatt)
     
     print("iteration: " + str(i))
     print("robotPos: " + str(robotPos))
     print("FRo: " + str(FRo))
     robotPos = robotPos + FRo
-    plt.quiver(robotPos[0], robotPos[1], FRoatt[0], FRoatt[1])
+    #plt.quiver(robotPos[0], robotPos[1], FRoatt[0], FRoatt[1])
+    #print("FRoatt[0]: " + str(FRoatt[0]))
+    #print("FRoatt[1]: " + str(FRoatt[1]))
+    print(np.shape(Fatt))
+    print("FRoatt: " + str(FRoatt))
+    print("FRoreps: " + str(FRoreps))
+    print("FRo: " + str(FRo))
+    #print("F: " + str([F[0][int(robotPos[0])][int(robotPos[1])],F[1][int(robotPos[0])][int(robotPos[1])]]))
+    
+    probePos = [10,14]#y,x
+    print("Fatt: " + str([Fatt[0][probePos[0]][probePos[1]],Fatt[1][probePos[0]][probePos[1]]]))
+    print("Freps: " + str([Freps[0][probePos[0]][probePos[1]],Freps[1][probePos[0]][probePos[1]]]))
+    print("F: " + str([F[0][probePos[0]][probePos[1]],F[1][probePos[0]][probePos[1]]])) #convention is y,x
 
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')

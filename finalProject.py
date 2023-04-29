@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import math
 import matplotlib.cm as cm
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, PillowWriter
 import matplotlib.cm as cm
 
 
@@ -54,18 +54,19 @@ vatt = []
 
 w = 0
 
-V = np.array([0,0])
-robotPos = np.array([0,0],dtype=np.float64)
-robot1 = Agent(robotPos,V)
-robot2 = Agent(np.array([0.,90.]),V)
-robot3 = Agent(np.array([70.,0.]),V)
+Vin = np.array([0,0])
+robot1 = Agent(np.array([0.,0.]),Vin)
+robot2 = Agent(np.array([0.,90.]),Vin)
+robot3 = Agent(np.array([70.,0.]),Vin)
+robot4 = Agent(np.array([0.,50.]),Vin)
+robot5 = Agent(np.array([50.,0.]),Vin)
 
-agents = [robot1,robot2,robot3]
+agents = [robot1,robot2,robot3,robot4,robot5]
 
-OB1 = APFObstacle([30,30],5,np.array([0,0]))
-OB2 = APFObstacle([55,45],5,np.array([0,.0]))
-OB3 = APFObstacle([65,85],5,np.array([0,0]))
-OB4 = APFObstacle([85,75],5,np.array([0,0]))
+OB1 = APFObstacle([30,30],5,np.array([-.1,-.1]))
+OB2 = APFObstacle([55,45],5,np.array([0,-.1]))
+OB3 = APFObstacle([65,85],5,np.array([.1,0]))
+OB4 = APFObstacle([85,75],5,np.array([-.1,-.1]))
 
 xi = .02
 VG = np.array([.25,.25])
@@ -76,8 +77,9 @@ obstacles = [OB1,OB2,OB3,OB4]
 
 
 def animateSOC(frame):
+    print(frame)
     plt.grid()
-    #plt.clf()
+    plt.clf()
     global agents
     global obstacles
     global goal
@@ -87,6 +89,7 @@ def animateSOC(frame):
 
     for robot in agents:
         robotPos = robot.robotPos
+        V = robot.V
         FRo = goal.calcFatt(robotPos,V)
         for obs in obstacles:
             FRorep = obs.calcFrepTotal(robotPos,V)
@@ -111,10 +114,13 @@ def animateSOC(frame):
     print("V: ",robot.V)
 
     plt.axis('square')
+    plt.xlim(0,125)
+    plt.ylim(0,125)
     
     
 
 def animateAFV(frame):
+    
     global robotPos
     obstacles = np.array([[0,0], [20,80]])
     goalPos  = np.array([60,60])
@@ -176,8 +182,10 @@ def animateAFV(frame):
         #plt.show()
 
 fig = plt.figure()
-ani = FuncAnimation(fig, animateSOC, interval=10,frames=1000)
-plt.show()
+animation = FuncAnimation(fig, animateSOC, interval=10,frames=250)
+writergif = PillowWriter(fps=30) 
+animation.save('animation.gif', writer=writergif)
+#plt.show()
 
     #generate_video(plt.show())
     #frames.append([plt.show(animated=True)])

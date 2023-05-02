@@ -66,15 +66,36 @@ agents = [robot1,robot2,robot3,robot4,robot5]
 OB1 = APFObstacle([30,30],5,np.array([-.1,-.1]))
 OB2 = APFObstacle([55,45],5,np.array([0,-.1]))
 OB3 = APFObstacle([65,85],5,np.array([.1,0]))
-OB4 = APFObstacle([85,75],5,np.array([-.1,-.1]))
+OB4 = APFObstacle([80,90],5,np.array([-.1,0]))
 
 xi = .02
-VG = np.array([.25,.25])
+VG = np.array([0,-.1])
 goalPos = [90,90]
 goal = Goal(goalPos,VG,xi)
 
 obstacles = [OB1,OB2,OB3,OB4]
 
+def animateTesting():
+    OB1 = APFObstacle([50,50],10,np.array([0,0]))
+    xPos, yPos = np.meshgrid(np.arange(0, 100, 1, dtype=float),
+                   np.arange(0, 100, 1, dtype=float))
+    
+    F = np.zeros((2,100,100))
+    for x in range(0,100):
+        for y in range(0,100):
+            print(OB1.calcFrepTotal(np.array([x,y]),[0,0]))
+            print(x,y)
+            F[:,x,y] = OB1.calcFrepTotal(np.array([x,y]),[0,0])[0]
+            #F[1,x,y] = OB1.calcFrepTotal(np.array([x,y]),[0,0])[1]
+
+    plt.quiver(xPos, yPos, F[0], F[1])
+    #Plotting
+    plt.plot(OB1.obstaclePos[0],OB1.obstaclePos[1],'o',color='green')
+    cir = plt.Circle((OB1.obstaclePos[0],OB1.obstaclePos[1]),OB1.p0,fill=False)
+    plt.gca().add_artist(cir)
+    
+    plt.show()
+    plt.axis('square')
 
 def animateSOC(frame):
     print(frame)
@@ -92,7 +113,6 @@ def animateSOC(frame):
         V = robot.V
         FRo = goal.calcFatt(robotPos,V)
         for obs in obstacles:
-            #obs.V0 = np.array([0.,0.])
             FRorep = obs.calcFrepTotal(robotPos,V)
             FRo = np.add(FRo, FRorep)
             #Plotting
@@ -123,7 +143,8 @@ def animateSOC(frame):
 def animateAFV(frame):
     
     global robotPos
-    obstacles = np.array([[0,0], [20,80]])
+    robotPos = [0,0]
+    obstacles = np.array([[0,0]])
     goalPos  = np.array([60,60])
 
     startPos = np.array([10,15])
@@ -145,7 +166,7 @@ def animateAFV(frame):
     uatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[0]
     vatt = calcFatt(xi,calcpG(goalPos,[x,y]),KV,VG,V)[1]
     Fatt = np.multiply([uatt, vatt],(1/repAttRatio))
-    print(uatt.shape)
+    # print(uatt.shape)
 
     F = Fatt #np.zeros((10,10))#Fatt
     print("Fatt: " + str(Fatt.shape))
@@ -155,10 +176,10 @@ def animateAFV(frame):
         #print(F)
         Frep = [urep, vrep]
         F = np.add(F, Frep)
-    print("F: " + str(F.shape))
+    # print("F: " + str(F.shape))
     uRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[0]
     vRoatt = calcFatt(xi,calcpG(goalPos,[robotPos[0],robotPos[1]]),KV,VG,V)[1]
-    #print("vRoatt: " + str(vRoatt))
+    # #print("vRoatt: " + str(vRoatt))
     FRoatt = np.multiply([uRoatt, vRoatt],(1/repAttRatio))
     #print("FRoatt: " + str(FRoatt))
     
@@ -175,18 +196,19 @@ def animateAFV(frame):
         FRo = np.add(FRo, FRorep)
     
     robotPos = robotPos + FRo
-
+    print(F.shape)
     plt.quiver(x, y, F[0], F[1])
     plt.plot(goalPos[0],goalPos[1],'x')
     plt.plot(robotPos[0],robotPos[1],'o',color='red')
     
-        #plt.show()
+    #plt.show()
 
 fig = plt.figure()
-animation = FuncAnimation(fig, animateSOC, interval=10,frames=250)
+animation = FuncAnimation(fig, animateSOC, interval=10,frames=400)
 writergif = PillowWriter(fps=30) 
-animation.save('movingGoals.gif', writer=writergif)
-#plt.show()
+animation.save('goalThroughObs.gif', writer=writergif)
+# plt.show()
+
 
     #generate_video(plt.show())
     #frames.append([plt.show(animated=True)])

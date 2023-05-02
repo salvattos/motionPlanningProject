@@ -41,7 +41,7 @@ class APFObstacle:
             k = .001
             Frep = (Frep/(self.magnitude([u,v])))*1/(1+np.exp(k*(self.magnitude([u,v]))))
         else: 
-            Frep = 0
+            Frep = [0,0]
         return Frep
 
     def calcpQ(self,currentPos):
